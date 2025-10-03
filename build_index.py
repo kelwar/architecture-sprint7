@@ -19,7 +19,7 @@ def get_files_in_directory_os(directory_path='.'):
 def preprocess_data(file_path):
     loader = TextLoader(file_path)
     pages = [page for page in loader.load()]
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=32)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
     return text_splitter.split_documents(pages)
 
 
@@ -50,4 +50,3 @@ faiss.write_index(index, "faiss.index")
 
 print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks))
 print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks))
-print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Младший брат Кроуси Октопуса"""]), index, chunks))
