@@ -1,9 +1,9 @@
 import os
+
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-from faiss import IndexFlatL2
-
+import faiss
 
 def get_files_in_directory_os(directory_path='.'):
     result = []
@@ -18,7 +18,6 @@ def get_files_in_directory_os(directory_path='.'):
 def preprocess_data(file_path):
     loader = TextLoader(file_path)
     pages = [page for page in loader.load()]
-
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=32)
     return text_splitter.split_documents(pages)
 
@@ -28,10 +27,14 @@ def get_embeddings(model, chunks):
 
 
 # Функция для поиска релевантного фрагмента к запросу пользователя
-def get_relevant_chunk(query, index, model, chunks, top_k=1):
-    embs = model.encode([query])
-    D, I = index.search(x=embs, k=top_k)
-    return chunks[I[0][0]]
+def get_relevant_chunk(query, index, chunks, top_k=1):
+    faiss.normalize_L2(query)
+    distances, ids = index.search(query, k=top_k)
+    print("distances: ", distances)
+    print("ids: ", ids)
+    for i in range(0, top_k):
+        print(chunks[ids[0][i]])
+    return chunks[ids[0][0]]
 
 
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -43,8 +46,10 @@ for file_path in paths:
         chunks.append(chunk)
 
 embeddings = get_embeddings(model, [chunk.page_content for chunk in chunks])
-index = IndexFlatL2(embeddings.shape[1])
+faiss.normalize_L2(embeddings)
+index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(embeddings)
+faiss.write_index(index, "faiss.index")
 
-print("Relevant chunk:\n", get_relevant_chunk("""Как зовут старшего сына Патрика Грейтхаунда""", index, model, chunks, 10))
-print("Relevant chunk:\n", get_relevant_chunk("""Главный город в Шуйтере""", index, model, chunks, 10))
+print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks, 10))
+print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks, 10))
