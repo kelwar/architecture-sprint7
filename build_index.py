@@ -1,9 +1,10 @@
 import os
 
+import faiss
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-import faiss
+
 
 def get_files_in_directory_os(directory_path='.'):
     result = []
@@ -30,10 +31,6 @@ def get_embeddings(model, chunks):
 def get_relevant_chunk(query, index, chunks, top_k=1):
     faiss.normalize_L2(query)
     distances, ids = index.search(query, k=top_k)
-    print("distances: ", distances)
-    print("ids: ", ids)
-    for i in range(0, top_k):
-        print(chunks[ids[0][i]])
     return chunks[ids[0][0]]
 
 
@@ -51,5 +48,5 @@ index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(embeddings)
 faiss.write_index(index, "faiss.index")
 
-print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks, 10))
-print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks, 10))
+print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks))
+print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks))
