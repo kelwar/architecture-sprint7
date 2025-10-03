@@ -50,3 +50,4 @@ faiss.write_index(index, "faiss.index")
 
 print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks))
 print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks))
+print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Младший брат Кроуси Октопуса"""]), index, chunks))
