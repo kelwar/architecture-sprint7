@@ -4,6 +4,7 @@ import faiss
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
+import time
 
 
 def get_files_in_directory_os(directory_path='.'):
@@ -34,6 +35,7 @@ def get_relevant_chunk(query, index, chunks, top_k=1):
     return chunks[ids[0][0]]
 
 
+start_time = time.time()
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 paths = get_files_in_directory_os("./knowledge_base")
 chunks = []
@@ -42,10 +44,15 @@ for file_path in paths:
     for chunk in file_chunks:
         chunks.append(chunk)
 
+print(f"Количество чанков для обработки: {len(chunks)}")
 embeddings = get_embeddings(model, [chunk.page_content for chunk in chunks])
 faiss.normalize_L2(embeddings)
 index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(embeddings)
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Время создания индекса: {elapsed_time:.2f} с.")
+
 faiss.write_index(index, "faiss.index")
 
 print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks))
