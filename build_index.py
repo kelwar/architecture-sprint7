@@ -1,10 +1,10 @@
 import os
+import time
 
 import faiss
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-import time
 
 
 def get_files_in_directory_os(directory_path='.'):
@@ -18,10 +18,8 @@ def get_files_in_directory_os(directory_path='.'):
 
 
 def preprocess_data(file_path):
-    loader = TextLoader(file_path)
-    pages = [page for page in loader.load()]
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
-    return text_splitter.split_documents(pages)
+    return (RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
+            .split_documents([page for page in TextLoader(file_path).load()]))
 
 
 def get_embeddings(model, chunks):
@@ -29,10 +27,10 @@ def get_embeddings(model, chunks):
 
 
 # Функция для поиска релевантного фрагмента к запросу пользователя
-def get_relevant_chunk(query, index, chunks, top_k=1):
+def get_relevant_chunks(query, index, chunks, top_k=1):
     faiss.normalize_L2(query)
     distances, ids = index.search(query, k=top_k)
-    return chunks[ids[0][0]]
+    return [chunks[ids[0][i]] for i in range(top_k)]
 
 
 start_time = time.time()
@@ -53,7 +51,12 @@ print(f"Время создания индекса: {time.time() - start_time:.2
 
 faiss.write_index(index, "faiss.index")
 
-for query in ["""Принцесса Песчаной страны""", """Старший брат Кроуси Октопуса"""]:
+for query in ["""Принцесса Песчаной страны""", """Старший брат Кроуси"""]:
+    print("Запрос: ", query)
     start_time = time.time()
-    print("Relevant chunk:\n", get_relevant_chunk(model.encode([query]), index, chunks))
+    relevant_chunks = get_relevant_chunks(model.encode([query]), index, chunks, 10)
     print(f"Время поиска релевантного чанка: {time.time() - start_time:.2f} с.")
+    print("Relevant chunks:")
+    for i, chunk in enumerate(relevant_chunks):
+        print(i + 1, chunk)
+    print()
