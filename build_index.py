@@ -49,11 +49,11 @@ embeddings = get_embeddings(model, [chunk.page_content for chunk in chunks])
 faiss.normalize_L2(embeddings)
 index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(embeddings)
-end_time = time.time()
-elapsed_time = end_time - start_time
-print(f"Время создания индекса: {elapsed_time:.2f} с.")
+print(f"Время создания индекса: {time.time() - start_time:.2f} с.")
 
 faiss.write_index(index, "faiss.index")
 
-print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Принцесса Песчаной страны"""]), index, chunks))
-print("Relevant chunk:\n", get_relevant_chunk(model.encode(["""Старший брат Кроуси Октопуса"""]), index, chunks))
+for query in ["""Принцесса Песчаной страны""", """Старший брат Кроуси Октопуса"""]:
+    start_time = time.time()
+    print("Relevant chunk:\n", get_relevant_chunk(model.encode([query]), index, chunks))
+    print(f"Время поиска релевантного чанка: {time.time() - start_time:.2f} с.")
