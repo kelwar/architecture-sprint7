@@ -35,7 +35,7 @@ def get_relevant_chunks(query, index, chunks, top_k=1):
 
 start_time = time.time()
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-paths = get_files_in_directory_os("./knowledge_base")
+paths = get_files_in_directory_os("../knowledge_base")
 chunks = []
 for file_path in paths:
     file_chunks = preprocess_data(file_path)
@@ -48,8 +48,6 @@ faiss.normalize_L2(embeddings)
 index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(embeddings)
 print(f"Время создания индекса: {time.time() - start_time:.2f} с.")
-
-faiss.write_index(index, "faiss.index")
 
 for query in ["""Принцесса Песчаной страны""", """Старший брат Кроуси"""]:
     print("Запрос: ", query)
