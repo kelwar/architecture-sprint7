@@ -82,4 +82,4 @@ def read_root():
 
 @app.post("/ask")
 def ask(query: Query):
-    return llm_chain.run({"context": chunks, "input": "Кто старший брат Кроуси Октопуса?"})
+    return llm_chain.run({"context": chunks, "input": query.question})
