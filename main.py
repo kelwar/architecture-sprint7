@@ -1,14 +1,13 @@
 import os
 
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_community.document_loaders import TextLoader
-from langchain_openai import ChatOpenAI
+from langchain_community.llms.yandex import YandexGPT
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 def get_files_in_directory_os(directory_path='.'):
     result = []
@@ -63,13 +62,12 @@ prompt = PromptTemplate.from_template(
     {input}
     '"""
 )
-api_key = os.getenv("OPENROUTER_KEY")
-llm = ChatOpenAI(
-    api_key=api_key,
-    base_url="https://openrouter.ai/api/v1",
-    model="openai/gpt-4o-mini"
-)
-llm_chain = LLMChain(prompt=prompt, llm=llm)
+api_key = SecretStr(os.getenv("YC_IAM_TOKEN"))
+llm = YandexGPT(model_uri="gpt://b1grfikcp5as92ttdh2d/yandexgpt-5-lite/latest",
+                model_name="yandexgpt-lite",
+                model_version="latest",
+                iam_token=api_key)
+llm_chain = prompt | llm
 
 app = FastAPI()
 
@@ -82,4 +80,4 @@ def read_root():
 
 @app.post("/ask")
 def ask(query: Query):
-    return llm_chain.run({"context": chunks, "input": query.question})
+    return llm_chain.invoke({"context": chunks, "input": query.question})
